@@ -10,8 +10,8 @@ var eventer = require('@momsfriendlydevco/eventer');
 * @emits ban Emitted as `({ip})` before an IP is banned, if the async return is boolean `false` the adding operation is aborted
 * @emits banned Emitted as `({ip})` after an IP is banned
 *
-* @emits ban Emitted as `({ip})` before an IP is unbanned, if the async return is boolean `false` the removal operation is aborted
-* @emits banned Emitted as `({ip})` after an IP is unbanned
+* @emits unban Emitted as `({ip})` before an IP is unbanned, if the async return is boolean `false` the removal operation is aborted
+* @emits unbanned Emitted as `({ip})` after an IP is unbanned
 */
 var expressJail = module.exports = function expressJailMiddleware(options) {
 	var settings = {
