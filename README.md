@@ -37,8 +37,8 @@ Returns an [@momsfriendlydevco/eventer](https://github.com/MomsFriendlyDevCo/eve
 
 | Event      | Emitted as             | Description                                                                                                                                    |
 |------------|------------------------|------------------------------------------------------------------------------------------------------------------------------------------------|
-| `ban`      | `(ip, ExpressRequest)` | Emitted _before_ the ban cycle concludes can return an async function which could eventually return boolean `false` which will prevent the ban |
-| `banned`   | `(ip, ExpressRequest)` | Emitted _after_ the ban cycle concludes                                                                                                        |
+| `ban`      | `(ip, req?, res?)` | Emitted _before_ the ban cycle concludes can return an async function which could eventually return boolean `false` which will prevent the ban |
+| `banned`   | `(ip, req?, res?)` | Emitted _after_ the ban cycle concludes                                                                                                        |
 | `unban`    | `(ip)`                 | Emitted when calling `expressJail.unban(ip)`, can return an (eventual) boolean `false` to abort                                                |
 | `unbanned` | `(ip)`                 | Emitted when `expressJail.unban(ip)` concluded                                                                                                 |
 

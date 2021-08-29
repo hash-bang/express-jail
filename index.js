@@ -8,11 +8,11 @@ var semverGte = require('semver/functions/gte')
 * @param {Object} [options] Options to adjust behaviour, `expressJail.defaults` is used to populate this
 * @returns {ExpressMiddleware} Express compatible middleware function
 *
-* @emits ban Emitted as `({ip})` before an IP is banned, if the async return is boolean `false` the adding operation is aborted
-* @emits banned Emitted as `({ip})` after an IP is banned
+* @emits ban Emitted as `({ip, req?, res?})` before an IP is banned, if the async return is boolean `false` the adding operation is aborted
+* @emits banned Emitted as `({ip, req?, res?})` after an IP is banned
 *
-* @emits unban Emitted as `({ip})` before an IP is unbanned, if the async return is boolean `false` the removal operation is aborted
-* @emits unbanned Emitted as `({ip})` after an IP is unbanned
+* @emits unban Emitted as `({ip, req?, res?})` before an IP is unbanned, if the async return is boolean `false` the removal operation is aborted
+* @emits unbanned Emitted as `({ip, req?, res?})` after an IP is unbanned
 */
 var expressJail = module.exports = function expressJailMiddleware(options) {
 	var settings = {
@@ -69,7 +69,7 @@ var expressJail = module.exports = function expressJailMiddleware(options) {
 			.then(()=> !bootComplete && bootPromise)
 			.then(()=> {
 				if (settings.paths.has(req.path)) {
-					return jailMiddleware.ban(req.ip, req)
+					return jailMiddleware.ban(req.ip, {req, res})
 						.then(()=> res.sendStatus(settings.responseCode))
 				} else {
 					next();
@@ -95,17 +95,18 @@ var expressJail = module.exports = function expressJailMiddleware(options) {
 	/**
 	* Ban an incomming IP address by adding it to the F2B jail
 	* @param {string} ip The IP address to ban
+	* @param {Object} [context] Optional additional named object parameters to pass to emitter
 	* @returns {Promise} A promise which resolves when the operation has completed
 	*
 	*/
-	jailMiddleware.ban = function expressJailBan(ip, req) {
+	jailMiddleware.ban = function expressJailBan(ip, context) {
 		return Promise.resolve()
-			.then(()=> jailMiddleware.emit('ban', {ip: ip, req}))
+			.then(()=> jailMiddleware.emit('ban', {ip, ...context}))
 			.then(doBan => { if (doBan === false) throw 'SKIP' })
 			.then(()=> exec([...settings.clientBinary, 'set', settings.jail, 'banip', ip], {buffer: true})
 				.catch(e => { throw new Error(`F2B-client add-to-jail error: ${e.toString()}`) })
 			)
-			.then(()=> jailMiddleware.emit('banned', {ip: ip, req}))
+			.then(()=> jailMiddleware.emit('banned', {ip, ...context}))
 			.catch(e => {
 				if (e === 'SKIP') return;
 				throw e;
@@ -116,17 +117,18 @@ var expressJail = module.exports = function expressJailMiddleware(options) {
 	/**
 	* Unban an incomming IP address by removing it from the F2B jail
 	* @param {string} ip The IP address to unban
+	* @param {Object} [context] Optional additional named object parameters to pass to emitter
 	* @returns {Promise} A promise which resolves when the operation has completed
 	*
 	*/
-	jailMiddleware.unban = function expressJailUnban(ip, req) {
+	jailMiddleware.unban = function expressJailUnban(ip, context) {
 		return Promise.resolve()
-			.then(()=> jailMiddleware.emit('unban', {ip: ip, req}))
+			.then(()=> jailMiddleware.emit('unban', {ip, ...context}))
 			.then(doBan => { if (doBan === false) throw 'SKIP' })
 			.then(()=> exec([...settings.clientBinary, 'set', settings.jail, 'unbanip', ip], {buffer: true})
 				.catch(e => { throw new Error(`F2B-client remove-from-jail error: ${e.toString()}`) })
 			)
-			.then(()=> jailMiddleware.emit('unbanned', {ip: ip, req}))
+			.then(()=> jailMiddleware.emit('unbanned', {ip, ...context}))
 			.catch(e => {
 				if (e === 'SKIP') return;
 				throw e;

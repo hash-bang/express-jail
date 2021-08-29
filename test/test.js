@@ -27,6 +27,8 @@ describe('express-jail', ()=> {
 
 	after('teradown server', ()=> server && server.close());
 
+	before('remove this IP from banlist', ()=> jail.unban(thisIp))
+
 	it('should make simple API calls', ()=>
 		axios.get(`${url}/api/foo`)
 			.then(({data}) => expect(data).be.deep.equal({string:'Foo!'}))
