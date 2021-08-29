@@ -1,6 +1,7 @@
 var debug = require('debug')('express-jail');
 var exec = require('@momsfriendlydevco/exec');
 var eventer = require('@momsfriendlydevco/eventer');
+var semverGte = require('semver/functions/gte')
 
 /**
 * Actual express middleware layer
@@ -25,6 +26,10 @@ var expressJail = module.exports = function expressJailMiddleware(options) {
 	// Boot & prepare jail
 	var bootComplete = false;
 	var bootPromise = Promise.resolve()
+		// Fetch + check version {{{
+		.then(()=> jailMiddleware.version())
+		.then(f2bVersion => settings.minVersion && semverGte(f2bVersion, settings.minVersion) ? true : Promise.reject(`F2B version ${f2bVersion} is lower than required minimum of ${settings.minVersion}`))
+		// }}}
 		// Try pinging server {{{
 		.then(()=> exec([...settings.clientBinary, 'ping'], {buffer: true})
 			.catch(e => { throw new Error(`F2B-client ping error: ${e.toString()}`) })
@@ -71,6 +76,20 @@ var expressJail = module.exports = function expressJailMiddleware(options) {
 				}
 			})
 	};
+
+
+	/**
+	* Retrieve the Fail2Ban version number
+	* @returns {Promise<string>} A promise which resolves when the operation has completed with the F2B version
+	*/
+	jailMiddleware.version = function expressJailVersion() {
+		return Promise.resolve()
+			.then(()=> exec([...settings.clientBinary, '--version'], {buffer: true})
+				.catch(e => { throw new Error(`F2B-client query-version error: ${e.toString()}`) })
+			)
+			.then(buf => /^Fail2Ban v(?<version>[\d\.]+).*/m.exec(buf)?.groups.version)
+			.then(version => version || Promise.reject('Unable to query Fail2Ban version - is client installed?'))
+	}
 
 
 	/**
@@ -172,4 +191,5 @@ expressJail.defaults= {
 
 	clientBinary: ['/usr/bin/sudo', '/usr/bin/fail2ban-client'],
 	jail: 'www',
+	minVersion: '0.11.1',
 };

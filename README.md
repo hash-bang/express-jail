@@ -4,7 +4,7 @@ Express middleware which add malicious actors into a [Fail2Ban](https://www.fail
 
 **Notes:**
 
-* This NPM requires `fail2ban` to be installed and running to work correctly.
+* This NPM requires `fail2ban` at version `0.11.1` or later to be installed and running to work correctly.
 * This module does include a testkit but, due to the way that localhost blocking works on Linux, you will need to use an external facing IP to test it
 
 
@@ -50,12 +50,13 @@ expressJail.defaults
 --------------------
 The default options structure. Can be overridden in each middleware init stage as needed.
 
-| Option         | Type            | Default   | Description                                         |
-|----------------|-----------------|-----------|-----------------------------------------------------|
-| `paths`        | `Array<String>` | See notes | List of path components to consider malicious       |
-| `responseCode` | `Number`        | `404`     | Initial response code to send before blocking       |
-| `clientBinary` | `Array<Sring>`  | See notes | Prefix exec paths to access `fail2ban-client`       |
-| `jail`         | `String`        | `"www"`   | Jail name to use within F2B to collect the ban list |
+| Option         | Type            | Default    | Description                                                         |
+|----------------|-----------------|------------|---------------------------------------------------------------------|
+| `paths`        | `Array<String>` | See notes  | List of path components to consider malicious                       |
+| `responseCode` | `Number`        | `404`      | Initial response code to send before blocking                       |
+| `clientBinary` | `Array<Sring>`  | See notes  | Prefix exec paths to access `fail2ban-client`                       |
+| `jail`         | `String`        | `"www"`    | Jail name to use within F2B to collect the ban list                 |
+| `minVersion`   | `String`        | `"0.11.1"` | Minimum Semver version of F2B to work with, set to falsy to disable |
 
 
 **Notes:**
