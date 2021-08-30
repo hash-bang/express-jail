@@ -89,3 +89,10 @@ expressJailInstance.hasBan(ip)
 ------------------------------
 Convenience wrapper for `expressJailInstance.bans()` which queries a specific IP address.
 Returns a promise which will resolve to a boolean if the provided IP is in the ban list.
+
+
+expressJailInstance.setup()
+---------------------------
+Setup and configure the Fail2Ban ruleset.
+This function is automatically run on initialization.
+Returns a promise which will resolve when the operation has completed.

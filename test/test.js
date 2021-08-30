@@ -27,7 +27,9 @@ describe('express-jail', ()=> {
 
 	after('teradown server', ()=> server && server.close());
 
-	before('remove this IP from banlist', ()=> jail.unban(thisIp))
+	before('remove this IP from banlist', ()=> jail.unban(thisIp)
+		.catch(()=> false) // Ignore jail not being valid at this stage
+	)
 
 	it('should make simple API calls', ()=>
 		axios.get(`${url}/api/foo`)

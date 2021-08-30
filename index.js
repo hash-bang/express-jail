@@ -54,10 +54,13 @@ var expressJail = module.exports = function expressJailMiddleware(options) {
 				debug(`F2B jail "${settings.jail}" already exists - skipping creation`);
 			} else {
 				debug(`F2B jail "${settings.jail}" doesnt exist - creating`);
-				return exec([...settings.clientBinary, 'add', settings.jail])
+				return exec([...settings.clientBinary, 'add', settings.jail, 'auto'])
 					.catch(e => { throw new Error(`F2B-client jail creation error: ${e.toString()}`) })
 			}
 		})
+		// }}}
+		// F2B setup {{{
+		.then(()=> jailMiddleware.setup())
 		// }}}
 		// End {{{
 		.then(()=> bootComplete = true)
@@ -76,6 +79,46 @@ var expressJail = module.exports = function expressJailMiddleware(options) {
 				}
 			})
 	};
+
+
+	/**
+	* Setup / configure the F2B jail
+	* @returns {Promise} A promise which resolves when the operation has completed
+	*/
+	jailMiddleware.setup = function expressJailSetup() {
+		return Promise.resolve()
+			// Setup jail action iptables-multiport if its not already present {{{
+			.then(()=> exec([...settings.clientBinary, 'set', settings.jail, 'addaction', 'iptables-multiport'])
+				.then(()=> Promise.resolve()
+					.then(()=> exec([...settings.clientBinary, 'set', settings.jail, 'action', 'iptables-multiport', 'actionstart', `iptables -N f2b-${settings.jail}\niptables -A f2b-${settings.jail} -j RETURN\niptables -I INPUT -p tcp -m multiport --dports ${settings.jailPorts} -j f2b-${settings.jail}`])
+						.catch(e => { throw new Error(`F2B-client setup-action-start error: ${e.toString()}`) })
+					)
+					.then(()=> exec([...settings.clientBinary, 'set', settings.jail, 'action', 'iptables-multiport', 'actionstop', `iptables -D INPUT -p tcp -m multiport --dports ${settings.jailPorts} -j f2b-${settings.jail}\niptables -F f2b-${settings.jail}\niptables -X f2b-${settings.jail}`])
+						.catch(e => { throw new Error(`F2B-client setup-action-stop error: ${e.toString()}`) })
+					)
+					.then(()=> exec([...settings.clientBinary, 'set', settings.jail, 'action', 'iptables-multiport', 'actionflush', `iptables -F f2b-${settings.jail}`])
+						.catch(e => { throw new Error(`F2B-client setup-action-flush error: ${e.toString()}`) })
+					)
+					.then(()=> exec([...settings.clientBinary, 'set', settings.jail, 'action', 'iptables-multiport', 'actioncheck', `iptables -n -L INPUT | grep -q 'f2b-${settings.jail}[ \\t]'`])
+						.catch(e => { throw new Error(`F2B-client setup-action-check error: ${e.toString()}`) })
+					)
+					.then(()=> exec([...settings.clientBinary, 'set', settings.jail, 'action', 'iptables-multiport', 'actionban', `iptables -I f2b-${settings.jail} 1 -s <ip> -j REJECT --reject-with icmp-port-unreachable`])
+						.catch(e => { throw new Error(`F2B-client setup-action-ban error: ${e.toString()}`) })
+					)
+					.then(()=> exec([...settings.clientBinary, 'set', settings.jail, 'action', 'iptables-multiport', 'actionunban', `iptables -D f2b-${settings.jail} -s <ip> -j REJECT --reject-with icmp-port-unreachable`])
+						.catch(e => { throw new Error(`F2B-client setup-action-unban error: ${e.toString()}`) })
+					)
+				)
+				.catch(e => {
+					if (e === 'Non-zero exit code: 255') return; // Skip already-exists errors
+					throw e;
+				})
+		)
+		// }}}
+		// Start jail - if not already started {{{
+		.then(()=> exec([...settings.clientBinary, 'start', settings.jail]))
+		// }}}
+	}
 
 
 	/**
@@ -193,5 +236,7 @@ expressJail.defaults= {
 
 	clientBinary: ['/usr/bin/sudo', '/usr/bin/fail2ban-client'],
 	jail: 'www',
+	jailPorts: 'http,https',
 	minVersion: '0.11.1',
+	setup: true,
 };
