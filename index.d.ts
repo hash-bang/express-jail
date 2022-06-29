@@ -1,7 +1,6 @@
 import type {RequestHandler, Response, Request} from 'express'
-import type {EventEmitter} from 'events'
 
-export default function expressJailMiddleware(options?: Partial<ExpressJailMiddlewareOptions>) : EventEmitter & RequestHandler & {
+export default function expressJailMiddleware(options?: Partial<ExpressJailMiddlewareOptions>) : RequestHandler & {
     ban: (ip: string, context?: unknown) => Promise<void>;
     bans: () => Promise<Array<{
         ip: string;
