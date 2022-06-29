@@ -9,10 +9,10 @@ export default function expressJailMiddleware(options?: Partial<ExpressJailMiddl
         to: Date;
     }>>;
     hasBan: (ip: string) => Promise<boolean>;
-    on(event: 'ban', handler: (ip: string, req?: Request, res?: Response) => Promise<boolean>): void
-    on(event: 'banned', handler: (ip: string, req?: Request, res?: Response) => void): void
-    on(event: 'unban', handler: (ip: string) => Promise<boolean>): void
-    on(event: 'unbanned', handler: (ip: string) => void): void
+    on(event: 'ban', handler: (info: {ip: string, req?: Request, res?: Response}) => Promise<boolean>): void
+    on(event: 'banned', handler: (info: {ip: string, req?: Request, res?: Response}) => void): void
+    on(event: 'unban', handler: (info: {ip: string}) => Promise<boolean>): void
+    on(event: 'unbanned', handler: (info: {ip: string}) => void): void
     setup: () => Promise<void>;
     unban: (ip: string, context?: unknown) => Promise<void>;
     version: () => Promise<string>;
