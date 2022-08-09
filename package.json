@@ -1,6 +1,6 @@
 {
   "name": "express-jail",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "Express middleware which add malicious actors into a Fail2Ban jail",
   "main": "index.js",
   "scripts": {
